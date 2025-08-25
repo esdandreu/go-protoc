@@ -1,5 +1,7 @@
 package bincache
 
 type BinCache interface {
-	Protoc(version string) (string, error)
+	BinPath(version string) (string, error)
+	CacheDir() string
+	Clean() error
 }
