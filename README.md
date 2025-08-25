@@ -10,7 +10,7 @@ Use [the `go tool` support available from Go
 To do this, you run `go get -tool`:
 
 ```shell
-go get -tool github.com/esdandreu@latest
+go get -tool github.com/esdandreu/go-protoc/cmd/go-protoc@latest
 ```
 
 From there, each invocation of `go-protoc` would be used like so:
