@@ -1,14 +1,12 @@
 package bincache
 
 import (
-	"archive/zip"
 	"fmt"
-	"io"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/esdandreu/go-protoc/pkg/downloader"
 	"github.com/esdandreu/go-protoc/pkg/releases"
@@ -16,41 +14,51 @@ import (
 
 const DefaultProtocBinCachePrefix = "go-protoc"
 
-type protocBinCache struct {
-	releases.VersionResolver
-	releases.URLResolver
-	downloader.FileDownloader
+type VersionResolver interface {
+	// ResolveVersion returns the version string for a given tag. As a special
+	// case, if the tag is "latest", the latest version should be returned.
+	// Otherwise, it sanitizes the input tag into a valid version string
+	// without the 'v' prefix.
+	ResolveVersion(tag string) (string, error)
+}
+
+type URLResolver interface {
+	// ResolveURL returns the URL to the protoc binary for a given version,
+	// operating system, and architecture.
+	ResolveURL(version, goos, goarch string) (*url.URL, error)
+}
+
+type ZipDownloader interface {
+	DownloadAndExtract(url string, destDir string) error
+}
+
+type ProtocBinCache struct {
+	VersionResolver
+	URLResolver
+	ZipDownloader
 	path   string
-	tag    string
 	goos   string
 	goarch string
 }
 
-// ? Should it be able to fail?
-
 // NewProtocBinCache creates a new protoc binary cache. Typically constructed
 // with the result of os.UserCacheDir().
-func NewProtocBinCache(cacheDir string, tag string) BinCache {
-	return &protocBinCache{
+func NewProtocBinCache(cacheDir string) *ProtocBinCache {
+	return &ProtocBinCache{
 		VersionResolver: releases.NewProtocVersionResolver(),
 		URLResolver:     releases.NewProtocURLResolver(),
-		FileDownloader:  downloader.NewFileDownloader(),
+		ZipDownloader:   downloader.NewZipDownloader(),
 		path:            path.Join(cacheDir, DefaultProtocBinCachePrefix),
-		tag:             tag,
 		goos:            runtime.GOOS,
 		goarch:          runtime.GOARCH,
 	}
 }
 
-func (protoc *protocBinCache) Path() string {
-	return protoc.path
-}
-
 // BinPath returns the path to the protoc binary in the cache. It will download
 // the release if it is not already cached.
-func (protoc *protocBinCache) BinPath() (string, error) {
+func (protoc *ProtocBinCache) BinPath(tag string) (string, error) {
 	// Resolve the tag to a version.
-	version, err := protoc.ResolveVersion(protoc.tag)
+	version, err := protoc.ResolveVersion(tag)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve version: %w", err)
 	}
@@ -76,12 +84,12 @@ func (protoc *protocBinCache) BinPath() (string, error) {
 	}
 
 	// Create the version directory
-	if err := os.MkdirAll(versionDir, 0755); err != nil {
+	if err := os.MkdirAll(versionDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
 	// Download and extract the zip file
-	if err := protoc.downloadAndExtract(downloadURL.String(), versionDir); err != nil {
+	if err := protoc.DownloadAndExtract(downloadURL.String(), versionDir); err != nil {
 		return "", fmt.Errorf("failed to download and extract: %w", err)
 	}
 
@@ -91,75 +99,4 @@ func (protoc *protocBinCache) BinPath() (string, error) {
 	}
 
 	return binPath, nil
-}
-
-// downloadAndExtract downloads a zip file from the given URL and extracts it to the destination directory
-func (protoc *protocBinCache) downloadAndExtract(url, destDir string) error {
-	// Create a temporary file for the download
-	tempFile, err := os.CreateTemp("", "protoc-*.zip")
-	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
-	}
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
-
-	// Download the file
-	_, err = protoc.DownloadFile(url, tempFile)
-	if err != nil {
-		return fmt.Errorf("failed to download file: %w", err)
-	}
-
-	// Reopen the temp file for reading
-	tempFile.Close()
-	zipReader, err := zip.OpenReader(tempFile.Name())
-	if err != nil {
-		return fmt.Errorf("failed to open zip file: %w", err)
-	}
-	defer zipReader.Close()
-
-	// Extract files
-	for _, file := range zipReader.File {
-		destPath := filepath.Join(destDir, file.Name)
-
-		// Check for ZipSlip vulnerability
-		if !strings.HasPrefix(destPath, filepath.Clean(destDir)+string(os.PathSeparator)) {
-			return fmt.Errorf("invalid file path: %s", file.Name)
-		}
-
-		if file.FileInfo().IsDir() {
-			os.MkdirAll(destPath, file.FileInfo().Mode())
-			continue
-		}
-
-		// Create the directories for the file
-		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
-		}
-
-		// Extract the file
-		fileReader, err := file.Open()
-		if err != nil {
-			return fmt.Errorf("failed to open file in zip: %w", err)
-		}
-
-		destFile, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.FileInfo().Mode())
-		if err != nil {
-			fileReader.Close()
-			return fmt.Errorf("failed to create destination file: %w", err)
-		}
-
-		_, err = io.Copy(destFile, fileReader)
-		fileReader.Close()
-		destFile.Close()
-
-		if err != nil {
-			return fmt.Errorf("failed to extract file: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (protoc *protocBinCache) Clean() error {
-	return nil
 }

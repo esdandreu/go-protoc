@@ -7,17 +7,13 @@ import (
 	"strconv"
 )
 
-type FileDownloader interface {
-	DownloadFile(url string, writer io.Writer) (int64, error)
+type FileDownloader struct{}
+
+func NewFileDownloader() *FileDownloader {
+	return &FileDownloader{}
 }
 
-type fileDownloader struct{}
-
-func NewFileDownloader() FileDownloader {
-	return &fileDownloader{}
-}
-
-func (downloader *fileDownloader) DownloadFile(url string, w io.Writer) (int64, error) {
+func (downloader *FileDownloader) DownloadFile(url string, w io.Writer) (int64, error) {
 	// Get the data.
 	resp, err := http.Get(url)
 	if err != nil {

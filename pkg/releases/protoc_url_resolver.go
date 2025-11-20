@@ -8,7 +8,7 @@ import (
 
 type ProtocURLResolver struct{}
 
-func NewProtocURLResolver() URLResolver {
+func NewProtocURLResolver() *ProtocURLResolver {
 	return &ProtocURLResolver{}
 }
 

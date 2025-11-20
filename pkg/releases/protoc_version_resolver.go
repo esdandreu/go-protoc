@@ -9,7 +9,7 @@ import (
 
 type ProtocVersionResolver struct{}
 
-func NewProtocVersionResolver() VersionResolver {
+func NewProtocVersionResolver() *ProtocVersionResolver {
 	return &ProtocVersionResolver{}
 }
 
