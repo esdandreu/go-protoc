@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package petstore;
 
+option go_package = "./petstore";
+
 import "google/protobuf/empty.proto";
 
 enum Status {
