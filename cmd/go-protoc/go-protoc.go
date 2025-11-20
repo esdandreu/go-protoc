@@ -8,24 +8,29 @@ import (
 	"github.com/esdandreu/go-protoc/pkg/bincache"
 )
 
-const defaultProtocVersion = "v32.0"
+const DefaultProtocTag = "latest"
 
 func main() {
+	// Determine protoc release tag.
+	tag, ok := os.LookupEnv("PROTOC_RELEASE_TAG")
+	if !ok {
+		tag = DefaultProtocTag
+	}
+
 	// Create binary cache
-	cache, err := bincache.NewProtocBinCache()
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatalf("Failed to get user cache dir: %v", err)
+	}
+	cache := bincache.NewProtocBinCache(cacheDir, tag)
 	if err != nil {
 		log.Fatalf("Failed to create protoc cache: %v", err)
 	}
 
 	// Get protoc binary path (downloads if needed)
-	version, ok := os.LookupEnv("PROTOC_RELEASE_TAG")
-	if !ok {
-		version = defaultProtocVersion
-	}
-
-	binPath, err := cache.BinPath(version)
+	binPath, err := cache.BinPath()
 	if err != nil {
-		log.Fatalf("Failed to get protoc binary v%s: %v", version, err)
+		log.Fatalf("Failed to get protoc binary %s: %v", tag, err)
 	}
 
 	cmd := exec.Command(binPath, os.Args[1:]...)

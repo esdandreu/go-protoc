@@ -2,76 +2,54 @@ package bincache
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"path"
 	"runtime"
 
+	"github.com/esdandreu/go-protoc/pkg/downloader"
 	"github.com/esdandreu/go-protoc/pkg/releases"
 )
 
-type ProtocBinCache struct {
-	cacheDir   string
-	downloader releases.Downloader
+const DefaultProtocBinCachePrefix = "go-protoc"
+
+type protocBinCache struct {
+	releases.VersionResolver
+	releases.URLResolver
+	downloader.FileDownloader
+	path   string
+	tag    string
+	goos   string
+	goarch string
 }
 
-// NewProtocBinCache creates a new filesystem-based binary cache
-func NewProtocBinCache() (BinCache, error) {
-	userCacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user cache directory: %w", err)
-	}
+// ? Should it be able to fail?
 
-	// Create application-specific cache directory
-	cacheDir := filepath.Join(userCacheDir, "go-protoc")
-	if err := os.MkdirAll(cacheDir, os.ModePerm); err != nil {
-		return nil, fmt.Errorf("failed to create cache directory: %w", err)
+// NewProtocBinCache creates a new protoc binary cache. Typically constructed
+// with the result of os.UserCacheDir().
+func NewProtocBinCache(cacheDir string, tag string) BinCache {
+	return &protocBinCache{
+		URLResolver:    releases.NewProtocURLResolver(),
+		FileDownloader: downloader.NewFileDownloader(),
+		path:           path.Join(cacheDir, DefaultProtocBinCachePrefix),
+		tag:            tag,
+		goos:           runtime.GOOS,
+		goarch:         runtime.GOARCH,
 	}
-
-	return &ProtocBinCache{
-		cacheDir:   cacheDir,
-		downloader: releases.NewGitHubDownloader(),
-	}, nil
 }
 
-// Protoc returns the path to the protoc binary for the specified version
-// Downloads it if not already cached
-func (fc *ProtocBinCache) BinPath(tag string) (string, error) {
-	versionCacheDir := filepath.Join(fc.cacheDir, "protoc-"+tag)
-	binaryPath := filepath.Join(versionCacheDir, "bin", "protoc")
-	if runtime.GOOS == "windows" {
-		binaryPath += ".exe"
-	}
-
-	// Check if binary already exists in cache
-	if _, err := os.Stat(binaryPath); err == nil {
-		return binaryPath, nil
-	}
-
-	// Download and extract protoc binary for the specified version
-	if _, err := fc.downloader.Download(
-		versionCacheDir, tag, runtime.GOOS, runtime.GOARCH,
-	); err != nil {
-		return "", fmt.Errorf(
-			"failed to download protoc version %s: %w", tag, err,
-		)
-	}
-
-	// Check if the binary exists after download
-	if _, err := os.Stat(binaryPath); err != nil {
-		return "", fmt.Errorf(
-			"protoc binary not found after download: %w", err,
-		)
-	}
-
-	return binaryPath, nil
+func (protoc *protocBinCache) Path() string {
+	return protoc.path
 }
 
-// CacheDir returns the cache directory path
-func (fc *ProtocBinCache) CacheDir() string {
-	return fc.cacheDir
+// BinPath returns the path to the protoc binary in the cache. It will download
+// the release if it is not already cached.
+func (protoc *protocBinCache) BinPath() (string, error) {
+	// Resolve the tag to a version.
+
+	//
+
+	return "", fmt.Errorf("not implemented")
 }
 
-// Clean removes all cached binaries
-func (fc *ProtocBinCache) Clean() error {
-	return os.RemoveAll(fc.cacheDir)
+func (protoc *protocBinCache) Clean() error {
+	return nil
 }
