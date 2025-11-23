@@ -13,9 +13,9 @@ import (
 
 const (
 	DefaultProtocTag         = "latest"
-	DefaultGoOutFlag         = "--go_out=."
+	DefaultGoOutFlag         = "--go_out=.."
 	DefaultGoOptPathFlag     = "--go_opt=paths=source_relative"
-	DefaultGoGrpcOutFlag     = "--go-grpc_out=."
+	DefaultGoGrpcOutFlag     = "--go-grpc_out=.."
 	DefaultGoGrpcOptFlag     = "--go-grpc_opt=paths=source_relative"
 	DefaultProtoFilesPattern = "*.proto"
 )
