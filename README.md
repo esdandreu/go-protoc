@@ -23,9 +23,12 @@ To do this, you run `go get -tool`:
 go get -tool github.com/esdandreu/go-protoc/cmd/go-protoc@latest
 ```
 
-The required [Protocol buffer Go
-plugins](https://grpc.io/docs/languages/go/quickstart/#prerequisites) are
-already marked as a dependency of this package.
+The [Protocol buffer Go plugins is also
+required](https://grpc.io/docs/languages/go/quickstart/#prerequisites).
+
+```shell
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+```
 
 From there, each invocation of `go-protoc` would be used like so:
 
@@ -77,3 +80,10 @@ Which then means you can invoke it like so:
 Note that you can also [move your `tools.go` into its own
 sub-module](https://www.jvt.me/posts/2024/09/30/go-tools-module/) to reduce the
 impact on your top-level `go.mod`.
+
+The [Protocol buffer Go plugins is also
+required](https://grpc.io/docs/languages/go/quickstart/#prerequisites).
+
+```shell
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+```
