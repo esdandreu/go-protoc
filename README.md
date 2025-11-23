@@ -1,5 +1,15 @@
 # go-protoc
-protoc wrapper as a go tool for seamless protocol buffers code generation.
+
+`go-protoc` is a go tool wrapper over [Protocol buffer compiler
+`protoc`](https://github.com/protocolbuffers/protobuf/releases) for seamless
+code generation. 
+
+It provides reasonable default values for `--go_out`, `--go_opt`,
+`--go-grpc_out` and `--go-grpc_opt` extracted from [gRPC Quick start
+guide](https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code). 
+
+It also provides reasonable values for the `.proto` files, looking for them in
+the same directory as the `//go:generate` code is declared.
 
 ## Usage
 
@@ -13,11 +23,16 @@ To do this, you run `go get -tool`:
 go get -tool github.com/esdandreu/go-protoc/cmd/go-protoc@latest
 ```
 
+The required [Protocol buffer Go
+plugins](https://grpc.io/docs/languages/go/quickstart/#prerequisites) are
+already marked as a dependency of this package.
+
 From there, each invocation of `go-protoc` would be used like so:
 
 ```go
 //go:generate go tool go-protoc
 ```
+
 
 ### Usage with go prior to 1.24
 

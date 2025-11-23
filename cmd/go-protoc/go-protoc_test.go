@@ -59,10 +59,10 @@ func TestDefaultProtocTag(t *testing.T) {
 }
 
 func TestRunProtoc_Success(t *testing.T) {
-	mockBin := createMockBinary(t)
 	cache := &mockBinCache{
-		binPath: mockBin,
+		binPath: createMockBinary(t),
 	}
+	dirFs := os.DirFS(t.TempDir())
 
 	// Save and restore environment
 	originalTag := os.Getenv("PROTOC_RELEASE_TAG")
@@ -77,7 +77,7 @@ func TestRunProtoc_Success(t *testing.T) {
 	// Test with specific tag
 	os.Setenv("PROTOC_RELEASE_TAG", "v25.3")
 
-	err := runProtoc(cache, "--version")
+	err := runProtoc(cache, dirFs, "--version")
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -92,10 +92,10 @@ func TestRunProtoc_Success(t *testing.T) {
 }
 
 func TestRunProtoc_DefaultTag(t *testing.T) {
-	mockBin := createMockBinary(t)
 	cache := &mockBinCache{
-		binPath: mockBin,
+		binPath: createMockBinary(t),
 	}
+	dirFs := os.DirFS(t.TempDir())
 
 	// Save and restore environment
 	originalTag, isSet := os.LookupEnv("PROTOC_RELEASE_TAG")
@@ -108,7 +108,7 @@ func TestRunProtoc_DefaultTag(t *testing.T) {
 	// Unset environment variable to test default
 	os.Unsetenv("PROTOC_RELEASE_TAG")
 
-	err := runProtoc(cache, "--help")
+	err := runProtoc(cache, dirFs, "--help")
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -124,8 +124,9 @@ func TestRunProtoc_BinCacheError(t *testing.T) {
 	cache := &mockBinCache{
 		err: expectedErr,
 	}
+	dirFs := os.DirFS(t.TempDir())
 
-	err := runProtoc(cache, "--version")
+	err := runProtoc(cache, dirFs, "--version")
 	if err == nil {
 		t.Fatal("Expected error from BinCache, got nil")
 	}
@@ -144,8 +145,9 @@ func TestRunProtoc_CommandExecutionError(t *testing.T) {
 	cache := &mockBinCache{
 		binPath: "/non/existent/binary",
 	}
+	dirFs := os.DirFS(t.TempDir())
 
-	err := runProtoc(cache, "--version")
+	err := runProtoc(cache, dirFs, "--version")
 	if err == nil {
 		t.Fatal("Expected error from command execution, got nil")
 	}
@@ -157,10 +159,10 @@ func TestRunProtoc_CommandExecutionError(t *testing.T) {
 }
 
 func TestRunProtoc_MultipleArguments(t *testing.T) {
-	mockBin := createMockBinary(t)
 	cache := &mockBinCache{
-		binPath: mockBin,
+		binPath: createMockBinary(t),
 	}
+	dirFs := os.DirFS(t.TempDir())
 
 	// Save and restore environment
 	originalTag := os.Getenv("PROTOC_RELEASE_TAG")
@@ -175,27 +177,28 @@ func TestRunProtoc_MultipleArguments(t *testing.T) {
 	os.Setenv("PROTOC_RELEASE_TAG", "v25.3")
 
 	// Test with multiple arguments
-	err := runProtoc(cache, "--help", "--version")
+	err := runProtoc(cache, dirFs, "--help", "--version")
 	if err != nil {
 		t.Errorf("Expected no error with multiple args, got: %v", err)
 	}
 }
 
 func TestRunProtoc_NoArguments(t *testing.T) {
-	mockBin := createMockBinary(t)
 	cache := &mockBinCache{
-		binPath: mockBin,
+		binPath: createMockBinary(t),
 	}
+	dirFs := os.DirFS(t.TempDir())
 
 	// Test with no arguments
-	err := runProtoc(cache)
+	err := runProtoc(cache, dirFs)
 	if err != nil {
 		t.Errorf("Expected no error with no args, got: %v", err)
 	}
 }
 
 func TestRunProtoc_EnvironmentVariableHandling(t *testing.T) {
-	mockBin := createMockBinary(t)
+	binPath := createMockBinary(t)
+	dirFs := os.DirFS(t.TempDir())
 
 	// Save original environment
 	originalTag := os.Getenv("PROTOC_RELEASE_TAG")
@@ -241,7 +244,7 @@ func TestRunProtoc_EnvironmentVariableHandling(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			cache := &mockBinCache{
-				binPath: mockBin,
+				binPath: binPath,
 			}
 
 			// Set up environment
@@ -251,7 +254,7 @@ func TestRunProtoc_EnvironmentVariableHandling(t *testing.T) {
 				os.Unsetenv("PROTOC_RELEASE_TAG")
 			}
 
-			err := runProtoc(cache, "--version")
+			err := runProtoc(cache, dirFs, "--version")
 			if err != nil {
 				t.Errorf("Expected no error for %s, got: %v", tc.name, err)
 			}
@@ -264,12 +267,12 @@ func TestRunProtoc_EnvironmentVariableHandling(t *testing.T) {
 }
 
 func TestRunProtoc_BinCacheCalledOnce(t *testing.T) {
-	mockBin := createMockBinary(t)
 	cache := &mockBinCache{
-		binPath: mockBin,
+		binPath: createMockBinary(t),
 	}
+	dirFs := os.DirFS(t.TempDir())
 
-	err := runProtoc(cache, "--version")
+	err := runProtoc(cache, dirFs, "--version")
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -284,6 +287,7 @@ func TestRunProtoc_ErrorMessageFormat(t *testing.T) {
 	cache := &mockBinCache{
 		err: expectedErr,
 	}
+	dirFs := os.DirFS(t.TempDir())
 
 	// Save and restore environment
 	originalTag := os.Getenv("PROTOC_RELEASE_TAG")
@@ -298,7 +302,7 @@ func TestRunProtoc_ErrorMessageFormat(t *testing.T) {
 	testTag := "v25.3"
 	os.Setenv("PROTOC_RELEASE_TAG", testTag)
 
-	err := runProtoc(cache, "--version")
+	err := runProtoc(cache, dirFs, "--version")
 	if err == nil {
 		t.Fatal("Expected error, got nil")
 	}
