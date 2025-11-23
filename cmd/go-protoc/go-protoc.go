@@ -12,13 +12,16 @@ import (
 )
 
 const (
-	DefaultProtocTag         = "latest"
-	DefaultGoOutFlag         = "--go_out=."
-	DefaultGoOptPathFlag     = "--go_opt=paths=source_relative"
-	DefaultGoGrpcOutFlag     = "--go-grpc_out=."
-	DefaultGoGrpcOptFlag     = "--go-grpc_opt=paths=source_relative"
-	DefaultProtoFilesPattern = "**/*.proto"
+	DefaultProtocTag     = "latest"
+	DefaultGoOutFlag     = "--go_out=."
+	DefaultGoOptPathFlag = "--go_opt=paths=source_relative"
+	DefaultGoGrpcOutFlag = "--go-grpc_out=."
+	DefaultGoGrpcOptFlag = "--go-grpc_opt=paths=source_relative"
 )
+
+var ProtoFilesPatterns = []string{"*.proto", "**/*.proto"}
+
+var debug = func(format string, args ...any) {}
 
 type BinCache interface {
 	BinPath(tag string) (string, error)
@@ -45,11 +48,13 @@ func runProtoc(cache BinCache, dirFs fs.FS, args ...string) error {
 		args = append(args, DefaultGoGrpcOptFlag)
 	}
 	if !hasNonFlagArgs {
-		matches, err := fs.Glob(dirFs, DefaultProtoFilesPattern)
-		if err != nil {
-			return fmt.Errorf("failed to glob proto files: %w", err)
+		for _, pattern := range ProtoFilesPatterns {
+			matches, err := fs.Glob(dirFs, pattern)
+			if err != nil {
+				return fmt.Errorf("failed to glob proto files: %w", err)
+			}
+			args = append(args, matches...)
 		}
-		args = append(args, matches...)
 	}
 
 	// Get protoc binary path (downloads if needed).
@@ -58,6 +63,7 @@ func runProtoc(cache BinCache, dirFs fs.FS, args ...string) error {
 		return fmt.Errorf("failed to get protoc binary %s: %w", tag, err)
 	}
 
+	debug("Executing protoc %s with args: %v", tag, args)
 	cmd := exec.Command(binPath, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
@@ -67,11 +73,17 @@ func runProtoc(cache BinCache, dirFs fs.FS, args ...string) error {
 }
 
 func main() {
+	// Set up debug logging.
+	_, debugEnabled := os.LookupEnv("DEBUG")
+	if debugEnabled {
+		debug = log.Printf
+	}
 	// Create binary cache
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		log.Fatalf("failed to get user cache dir: %v", err)
 	}
+	debug("go-protoc cache dir: %s", cacheDir)
 	cache := bincache.NewProtocBinCache(cacheDir)
 	dirFs := os.DirFS(".")
 	if err := runProtoc(cache, dirFs, os.Args[1:]...); err != nil {
