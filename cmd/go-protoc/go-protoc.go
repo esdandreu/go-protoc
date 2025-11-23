@@ -13,11 +13,11 @@ import (
 
 const (
 	DefaultProtocTag         = "latest"
-	DefaultGoOutFlag         = "--go_out=.."
+	DefaultGoOutFlag         = "--go_out=."
 	DefaultGoOptPathFlag     = "--go_opt=paths=source_relative"
-	DefaultGoGrpcOutFlag     = "--go-grpc_out=.."
+	DefaultGoGrpcOutFlag     = "--go-grpc_out=."
 	DefaultGoGrpcOptFlag     = "--go-grpc_opt=paths=source_relative"
-	DefaultProtoFilesPattern = "*.proto"
+	DefaultProtoFilesPattern = "**/*.proto"
 )
 
 type BinCache interface {
@@ -35,8 +35,14 @@ func runProtoc(cache BinCache, dirFs fs.FS, args ...string) error {
 	if !slices.Contains(flags, "go_out") {
 		args = append(args, DefaultGoOutFlag)
 	}
+	if !slices.Contains(flags, "go_opt") {
+		args = append(args, DefaultGoOptPathFlag)
+	}
 	if !slices.Contains(flags, "go-grpc_out") {
 		args = append(args, DefaultGoGrpcOutFlag)
+	}
+	if !slices.Contains(flags, "go-grpc_opt") {
+		args = append(args, DefaultGoGrpcOptFlag)
 	}
 	if !hasNonFlagArgs {
 		matches, err := fs.Glob(dirFs, DefaultProtoFilesPattern)
