@@ -5,7 +5,7 @@ go 1.25.0
 tool github.com/esdandreu/go-protoc/cmd/go-protoc
 
 require (
-	github.com/esdandreu/go-protoc v0.7.0 // indirect
+	github.com/esdandreu/go-protoc v0.8.0 // indirect
 	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/net v0.46.1-0.20251013234738-63d1a5100f82 // indirect
 	golang.org/x/sys v0.37.0 // indirect

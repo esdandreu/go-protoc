@@ -1,5 +1,5 @@
-github.com/esdandreu/go-protoc v0.7.0 h1:SKY1hhHuRZQzGNLY25q1LUNwL0pqGaIb8dOhlh2/teg=
-github.com/esdandreu/go-protoc v0.7.0/go.mod h1:KUD/BgvFG3chkrvxl5ZswQ3GOH5wfsNz2Mz3OoLE3aE=
+github.com/esdandreu/go-protoc v0.8.0 h1:gTMMQjQTaujYv88AXvvFOMaS0/gJOBLw9NZjUPX5NOM=
+github.com/esdandreu/go-protoc v0.8.0/go.mod h1:KUD/BgvFG3chkrvxl5ZswQ3GOH5wfsNz2Mz3OoLE3aE=
 golang.org/x/net v0.47.0 h1:Mx+4dIFzqraBXUugkia1OOvlD6LemFo1ALMHjrXDOhY=
 golang.org/x/net v0.47.0/go.mod h1:/jNxtkgq5yWUGYkaZGqo27cfGZ1c5Nen03aYrrKpVRU=
 golang.org/x/sys v0.38.0 h1:3yZWxaJjBmCWXqhN1qh02AkOnCQ1poK6oF+a7xWL6Gc=

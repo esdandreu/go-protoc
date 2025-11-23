@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/esdandreu/go-protoc v0.7.0 // indirect
+	github.com/esdandreu/go-protoc v0.8.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
